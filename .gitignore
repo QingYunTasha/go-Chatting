@@ -13,3 +13,10 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+vendor/
+article_clean
+_*
+.DS_Store
+engine
+bin/
