@@ -1,1 +1,4 @@
-package domain
+package usecasedomain
+
+type UsecaseRepo interface {
+}
