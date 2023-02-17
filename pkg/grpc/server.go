@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/yourusername/yourproject/internal/chat"
+	"go-chatting/internal/service/chat"
+
 	"google.golang.org/grpc"
 )
 
