@@ -29,3 +29,33 @@ type User struct {
 	Name   string  `gorm:"unique"`
 	Groups []Group `gorm:"many2many:group_users;"`
 }
+
+type Message struct {
+	ID        uint32 `gorm:"primaryKey"`
+	SenderID  uint32
+	Group     string
+	Timestamp time.Time
+	Content   string
+}
+
+type MessageQueue struct {
+	Queue chan Message
+}
+
+func NewMessageQueue(size int) *MessageQueue {
+	return &MessageQueue{
+		Queue: make(chan Message, size),
+	}
+}
+
+func (mq *MessageQueue) Push(item Message) {
+	mq.Queue <- item
+}
+
+func (mq *MessageQueue) Pop() Message {
+	return <-mq.Queue
+}
+
+func (mq *MessageQueue) Len() int {
+	return len(mq.Queue)
+}

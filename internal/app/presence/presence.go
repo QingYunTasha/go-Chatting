@@ -1,5 +1,9 @@
 package usecase
 
-func GetStatus() {}
+func GetStatus(senderID, receiverID, channelType, status string) error {
+	return nil
+}
 
-func SendStatus() {}
+func SendStatus(senderID, receiverID, channelType, status string) error {
+	return nil
+}

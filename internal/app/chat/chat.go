@@ -11,10 +11,14 @@ func (u *ChatUsecase) SendMessage(senderID, receiverID, channelType, message str
 	return nil
 }
 
-func (u *ChatUsecase) GetMessage(user1ID, user2ID, channelType, preMessageID string) error {
+func (u *ChatUsecase) GetMessage(senderID, receiverID, channelType, preMessageID string) error {
 	return nil
 }
 
-func GetStatus() {}
+func GetStatus(senderID, receiverID, channelType, status string) error {
+	return nil
+}
 
-func SendStatus() {}
+func SendStatus(senderID, receiverID, channelType, status string) error {
+	return nil
+}
