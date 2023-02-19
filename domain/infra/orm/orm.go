@@ -10,14 +10,6 @@ type PrivateMessage struct {
 	Message   string
 }
 
-type GroupMessage struct {
-	ID        uint `gorm:"primaryKey"`
-	Sender    string
-	GroupID   uint
-	Timestamp time.Time
-	Message   string
-}
-
 type Group struct {
 	ID    uint   `gorm:"primaryKey"`
 	Name  string `gorm:"unique"`
@@ -30,7 +22,7 @@ type User struct {
 	Groups []Group `gorm:"many2many:group_users;"`
 }
 
-type Message struct {
+type GroupMessage struct {
 	ID        uint32 `gorm:"primaryKey"`
 	SenderID  uint32
 	Group     string
@@ -39,23 +31,11 @@ type Message struct {
 }
 
 type MessageQueue struct {
-	Queue chan Message
+	Queue chan GroupMessage
 }
 
 func NewMessageQueue(size int) *MessageQueue {
 	return &MessageQueue{
-		Queue: make(chan Message, size),
+		Queue: make(chan GroupMessage, size),
 	}
-}
-
-func (mq *MessageQueue) Push(item Message) {
-	mq.Queue <- item
-}
-
-func (mq *MessageQueue) Pop() Message {
-	return <-mq.Queue
-}
-
-func (mq *MessageQueue) Len() int {
-	return len(mq.Queue)
 }

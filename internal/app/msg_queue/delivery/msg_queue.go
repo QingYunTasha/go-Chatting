@@ -23,7 +23,7 @@ func (s *Server) PublishMessage(stream MessageQueue_PublishMessageServer) error 
 			return err
 		}
 
-		s.Mq.Queue <- ormdomain.Message{
+		s.Mq.Queue <- ormdomain.GroupMessage{
 			ID:        msg.ID,
 			SenderID:  msg.SenderID,
 			Timestamp: msg.Timestamp.AsTime(),
