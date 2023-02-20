@@ -36,7 +36,7 @@ func (u *NotificationUsecase) PublishMessage(ctx context.Context, msg ormdomain.
 	if err := u.Stream.Send(&msg_queue.Message{
 		ID:        msg.ID,
 		SenderID:  msg.SenderID,
-		Group:     msg.Group,
+		GroupID:   msg.GroupID,
 		Timestamp: timestamppb.New(msg.Timestamp),
 		Content:   msg.Content,
 	}); err != nil {

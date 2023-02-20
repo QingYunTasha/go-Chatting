@@ -27,7 +27,7 @@ func (s *Server) PublishMessage(stream MessageQueue_PublishMessageServer) error 
 			ID:        msg.ID,
 			SenderID:  msg.SenderID,
 			Timestamp: msg.Timestamp.AsTime(),
-			Group:     msg.Group,
+			GroupID:   msg.GroupID,
 			Content:   msg.Content,
 		}
 	}
@@ -40,7 +40,7 @@ func (s *Server) ConsumeMessage(_ *empty.Empty, stream MessageQueue_ConsumeMessa
 			ID:        msg.ID,
 			SenderID:  msg.SenderID,
 			Timestamp: timestamppb.New(msg.Timestamp),
-			Group:     msg.Group,
+			GroupID:   msg.GroupID,
 			Content:   msg.Content,
 		}); err != nil {
 			return err

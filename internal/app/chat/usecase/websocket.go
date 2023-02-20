@@ -68,16 +68,21 @@ func UserConnect(ctx context.Context, r *http.Request, w gin.ResponseWriter, use
 	for msg := range messageChan {
 		err := json.Unmarshal(msg, &chatPayload)
 		if err != nil {
-			log.Println("webSocket message parse error:", err)
+			log.Println("Unmarshal webSocket message error:", err)
 			return err
 		}
 
 		switch chatPayload.Type {
 		case PrivateChatType:
-			ProcessPrivateChat(chatPayload)
+			err = ProcessPrivateChat(chatPayload)
 		case StatusType:
-			ProcessStatus(chatPayload)
+			err = ProcessStatus(chatPayload)
 		}
+		if err != nil {
+			log.Println("Process webSocket message error:", err)
+			return err
+		}
+
 	}
 	return nil
 }
@@ -98,6 +103,7 @@ func ProcessHistoryCatchUp(user1Id, user2ID uint32) error {
 }
 
 func GetUnsendMessage(user1Id, user2ID uint32) ([]ormdomain.PrivateMessage, error) {
+
 	return nil, nil
 }
 
@@ -105,10 +111,10 @@ func SendUnsendMessage([]ormdomain.PrivateMessage) error {
 	return nil
 }
 
-func ProcessPrivateChat(chatPayLoad ChatPayLoad) {
-
+func ProcessPrivateChat(chatPayLoad ChatPayLoad) error {
+	return nil
 }
 
-func ProcessStatus(chatPayLoad ChatPayLoad) {
-
+func ProcessStatus(chatPayLoad ChatPayLoad) error {
+	return nil
 }
