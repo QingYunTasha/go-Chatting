@@ -10,7 +10,7 @@ import (
 
 type Server struct {
 	UnimplementedMessageQueueServer
-	Mq ormdomain.MessageQueue
+	Mq *ormdomain.MessageQueue
 }
 
 func (s *Server) PublishMessage(stream MessageQueue_PublishMessageServer) error {

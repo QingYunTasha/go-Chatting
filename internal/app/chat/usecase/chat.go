@@ -15,7 +15,7 @@ type NotificationUsecase struct {
 }
 
 func NewNotificationUsecase() *NotificationUsecase {
-	var opts []grpc.DialOption
+	var opts grpc.DialOption
 	conn, err := grpc.Dial(":50051", opts)
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)

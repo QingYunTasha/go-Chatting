@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 
+	ormdomain "github.com/QingYunTasha/go-Chatting/domain/infra/orm"
 	msg_queue "github.com/QingYunTasha/go-Chatting/internal/app/msg_queue/delivery"
 	"google.golang.org/grpc"
 )
@@ -15,7 +16,10 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	msg_queue.RegisterMessageQueueServer(s, &msg_queue.Server{})
+
+	msg_queue.RegisterMessageQueueServer(s, &msg_queue.Server{
+		Mq: ormdomain.NewMessageQueue(32),
+	})
 
 	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {

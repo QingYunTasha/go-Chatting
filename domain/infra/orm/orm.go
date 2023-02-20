@@ -3,11 +3,11 @@ package domain
 import "time"
 
 type PrivateMessage struct {
-	ID        uint `gorm:"primaryKey"`
-	Sender    string
-	Receiver  string
-	Timestamp time.Time
-	Message   string
+	ID         uint32 `gorm:"primaryKey"`
+	SenderID   uint32
+	ReceiverID uint32
+	Timestamp  time.Time
+	Content    string
 }
 
 type Group struct {
