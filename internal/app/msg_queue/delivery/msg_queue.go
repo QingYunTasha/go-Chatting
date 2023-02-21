@@ -3,7 +3,7 @@ package delivery
 import (
 	"io"
 
-	ormdomain "github.com/QingYunTasha/go-Chatting/domain/infra/orm"
+	ormdomain "github.com/QingYunTasha/go-Chatting/domain/usecase/msg_queue"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

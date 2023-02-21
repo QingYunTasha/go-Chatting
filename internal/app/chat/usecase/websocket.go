@@ -103,6 +103,7 @@ func ProcessHistoryCatchUp(user1Id, user2ID uint32) error {
 }
 
 func GetUnsendMessage(user1Id, user2ID uint32) ([]ormdomain.PrivateMessage, error) {
+	var messages []ormdomain.PrivateMessage
 
 	return nil, nil
 }
