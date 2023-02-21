@@ -3,14 +3,15 @@ package delivery
 import (
 	"io"
 
-	ormdomain "github.com/QingYunTasha/go-Chatting/domain/usecase/msg_queue"
+	ormdomain "github.com/QingYunTasha/go-Chatting/domain/infra/orm"
+	pkg "github.com/QingYunTasha/go-Chatting/pkg/message_queue"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Server struct {
 	UnimplementedMessageQueueServer
-	Mq *ormdomain.MessageQueue
+	Mq *pkg.MessageQueue
 }
 
 func (s *Server) PublishMessage(stream MessageQueue_PublishMessageServer) error {

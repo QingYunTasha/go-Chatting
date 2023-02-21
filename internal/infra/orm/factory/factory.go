@@ -12,9 +12,10 @@ func InitDb(dsn string) (*gorm.DB, error) {
 	})
 }
 
-type OrmRepository struct{}
+type OrmRepository struct {
+}
 
-func InitOrmRepository(db *gorm.DB) (*OrmRepository, error) {
+func NewOrmRepository(db *gorm.DB) (*OrmRepository, error) {
 	if err := db.AutoMigrate(); err != nil {
 		return nil, err
 	}

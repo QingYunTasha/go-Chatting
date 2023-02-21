@@ -1,8 +1,7 @@
 package orm
 
 import (
-	"errors"
-
+	ormdomain "github.com/QingYunTasha/go-Chatting/domain/infra/orm"
 	"gorm.io/gorm"
 )
 
@@ -16,24 +15,21 @@ func NewPrivateMessageRepository(db *gorm.DB) PrivateMessageRepository {
 	}
 }
 
-func (r PrivateMessageRepository) Create(message *PrivateMessage) error {
+func (r PrivateMessageRepository) Create(message *ormdomain.PrivateMessage) error {
 	return r.db.Create(message).Error
 }
 
-func (r PrivateMessageRepository) Get(ID uint32) (*PrivateMessage, error) {
-	var message PrivateMessage
+func (r PrivateMessageRepository) Get(ID uint32) (*ormdomain.PrivateMessage, error) {
+	var message ormdomain.PrivateMessage
 	if err := r.db.Preload("Sender").Preload("Receiver").First(&message, ID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
-		}
 		return nil, err
 	}
 
 	return &message, nil
 }
 
-func (r PrivateMessageRepository) GetBetweenUsers(senderID, receiverID uint32) ([]PrivateMessage, error) {
-	var messages []PrivateMessage
+func (r PrivateMessageRepository) GetBetweenUsers(senderID, receiverID uint32) ([]ormdomain.PrivateMessage, error) {
+	var messages []ormdomain.PrivateMessage
 	if err := r.db.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)",
 		senderID, receiverID, receiverID, senderID).
 		Order("timestamp").Find(&messages).Error; err != nil {
@@ -44,5 +40,5 @@ func (r PrivateMessageRepository) GetBetweenUsers(senderID, receiverID uint32) (
 }
 
 func (r PrivateMessageRepository) Delete(ID uint32) error {
-	return r.db.Delete(&PrivateMessage{}, ID).Error
+	return r.db.Delete(&ormdomain.PrivateMessage{}, ID).Error
 }
