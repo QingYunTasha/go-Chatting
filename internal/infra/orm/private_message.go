@@ -9,8 +9,8 @@ type PrivateMessageRepository struct {
 	db *gorm.DB
 }
 
-func NewPrivateMessageRepository(db *gorm.DB) PrivateMessageRepository {
-	return PrivateMessageRepository{
+func NewPrivateMessageRepository(db *gorm.DB) ormdomain.PrivateMessageRepository {
+	return &PrivateMessageRepository{
 		db: db,
 	}
 }
@@ -28,7 +28,7 @@ func (r PrivateMessageRepository) Get(ID uint32) (*ormdomain.PrivateMessage, err
 	return &message, nil
 }
 
-func (r PrivateMessageRepository) GetBetweenUsers(senderID, receiverID uint32) ([]ormdomain.PrivateMessage, error) {
+func (r PrivateMessageRepository) GetBetweenUsersAfterMsgID(senderID, receiverID, lastID uint32) ([]ormdomain.PrivateMessage, error) {
 	var messages []ormdomain.PrivateMessage
 	if err := r.db.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)",
 		senderID, receiverID, receiverID, senderID).
