@@ -4,7 +4,7 @@
 // 	protoc        v3.12.4
 // source: internal/app/msg_queue/delivery/msg_queue.proto
 
-package delivery
+package domain
 
 import (
 	empty "github.com/golang/protobuf/ptypes/empty"
