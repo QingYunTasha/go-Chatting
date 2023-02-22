@@ -11,13 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type MessageType string
-
-const (
-	PrivateChatType MessageType = "PrivateChatType"
-	StatusType      MessageType = "StatusType"
-)
-
 type NotificationUsecase struct {
 	Stream  msgqueuedomain.MessageQueue_PublishMessageClient
 	OrmRepo orm.OrmRepository
@@ -31,7 +24,8 @@ func NewNotificationUsecase() *NotificationUsecase {
 	}
 
 	client := msgqueuedomain.NewMessageQueueClient(conn)
-	stream, err := client.PublishMessage(context.TODO())
+	ctx := context.Background()
+	stream, err := client.PublishMessage(ctx)
 	if err != nil {
 		log.Fatalf("client.PublishMessage failed: %v", err)
 	}

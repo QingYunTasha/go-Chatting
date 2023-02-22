@@ -8,6 +8,7 @@ type MessageType string
 
 const (
 	PrivateChatType MessageType = "PrivateChatType"
+	GroupChatType   MessageType = "GroupChatType"
 	StatusType      MessageType = "StatusType"
 )
 

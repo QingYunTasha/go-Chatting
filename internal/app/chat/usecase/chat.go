@@ -7,43 +7,22 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"sync"
 
 	ormdomain "github.com/QingYunTasha/go-Chatting/domain/infra/orm"
 	chatdomain "github.com/QingYunTasha/go-Chatting/domain/usecase/chat"
-	orm "github.com/QingYunTasha/go-Chatting/internal/infra/orm/factory"
+	ormfactory "github.com/QingYunTasha/go-Chatting/internal/infra/orm/factory"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
 
 type ChatUsecase struct {
-	OrmRepo orm.OrmRepository
+	OrmRepo ormfactory.OrmRepository
 	ConnMgr ConnectionManager
 }
 
-type ConnectionManager struct {
-	connections map[uint32]*net.Conn
-	mutex       sync.RWMutex
-}
-
-func (cm *ConnectionManager) AddConnection(userID uint32, conn *net.Conn) {
-	cm.mutex.Lock()
-	defer cm.mutex.Unlock()
-	cm.connections[userID] = conn
-}
-
-func (cm *ConnectionManager) GetConnection(userID uint32) (*net.Conn, bool) {
-	cm.mutex.RLock()
-	defer cm.mutex.RUnlock()
-	conn, ok := cm.connections[userID]
-	return conn, ok
-}
-
-func (cm *ConnectionManager) RemoveConnection(userID uint32) {
-	cm.mutex.Lock()
-	defer cm.mutex.Unlock()
-	delete(cm.connections, userID)
+func NewChatUsecase(ormRepo ormfactory.OrmRepository) *ChatUsecase {
+	return &ChatUsecase{}
 }
 
 func (u *ChatUsecase) HandleReadWebSocket(conn net.Conn, messageChan chan []byte) {
@@ -96,8 +75,12 @@ func (u *ChatUsecase) UserConnect(ctx context.Context, r *http.Request, w gin.Re
 		switch chatPayload.Type {
 		case chatdomain.PrivateChatType:
 			err = u.ProcessPrivateChat(chatPayload)
+		case chatdomain.GroupChatType:
+			err = u.ProcessGroupChat(chatPayload)
 		case chatdomain.StatusType:
 			err = u.ProcessStatus(chatPayload)
+		default:
+			log.Print("unknown chat type:", chatPayload.Type)
 		}
 		if err != nil {
 			log.Println("Process webSocket message error:", err)
@@ -151,8 +134,18 @@ func (u *ChatUsecase) ProcessPrivateChat(chatPayLoad chatdomain.ChatPayLoad) err
 	}
 
 	err = wsutil.WriteServerMessage(*conn, ws.OpText, payLoadBytes)
-
 	return err
+}
+
+func (u *ChatUsecase) ProcessGroupChat(chatPayLoad chatdomain.ChatPayLoad) error {
+	senderID := chatPayLoad.SenderID
+
+	if err := u.OrmRepo.GroupMessage.Create(&chatPayLoad.GroupMessage); err != nil {
+		return err
+	}
+
+	SendGroupMessage()
+	return nil
 }
 
 func (u *ChatUsecase) ProcessStatus(chatPayLoad chatdomain.ChatPayLoad) error {
@@ -162,25 +155,12 @@ func (u *ChatUsecase) ProcessStatus(chatPayLoad chatdomain.ChatPayLoad) error {
 		return err
 	}
 
+	SendUserStatus()
+
 	return nil
 }
 
-func NewChatUsecase() *ChatUsecase {
-	return &ChatUsecase{}
-}
-
-func (u *ChatUsecase) SendMessage(senderID, receiverID, channelType, message string) error {
-	return nil
-}
-
-func (u *ChatUsecase) GetMessage(senderID, receiverID, channelType, preMessageID string) error {
-	return nil
-}
-
-func GetStatus(senderID, receiverID, channelType, status string) error {
-	return nil
-}
-
-func SendStatus(senderID, receiverID, channelType, status string) error {
-	return nil
+func SendUserStatus() error {
+	SendToPrivate()
+	SendToGroup()
 }

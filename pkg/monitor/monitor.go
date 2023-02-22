@@ -1,20 +1,16 @@
 package monitor
 
 import (
-	usecasedomain "go-chatting/domain/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type MonitorHandler struct {
-	Usecase *usecasedomain.UsecaseRepo
 }
 
-func NewMonitorHandler(server *gin.Engine, usecase *usecasedomain.UsecaseRepo) {
-	mh := MonitorHandler{
-		Usecase: usecase,
-	}
+func NewMonitorHandler(server *gin.Engine) {
+	mh := MonitorHandler{}
 
 	server.GET("/liveness", mh.LivenessCheck)
 	server.GET("/readiness", mh.ReadinessCheck)
