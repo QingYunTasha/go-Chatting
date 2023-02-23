@@ -138,13 +138,13 @@ func (u *ChatUsecase) ProcessPrivateChat(chatPayLoad chatdomain.ChatPayLoad) err
 }
 
 func (u *ChatUsecase) ProcessGroupChat(chatPayLoad chatdomain.ChatPayLoad) error {
-	senderID := chatPayLoad.SenderID
-
 	if err := u.OrmRepo.GroupMessage.Create(&chatPayLoad.GroupMessage); err != nil {
 		return err
 	}
 
-	SendGroupMessage()
+	if err := SendGroupMessage(chatPayLoad.GroupMessage); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -155,12 +155,29 @@ func (u *ChatUsecase) ProcessStatus(chatPayLoad chatdomain.ChatPayLoad) error {
 		return err
 	}
 
-	SendUserStatus()
+	SendUserStatus(userID, chatPayLoad.Status)
 
 	return nil
 }
 
-func SendUserStatus() error {
-	SendToPrivate()
-	SendToGroup()
+func SendUserStatus(userID uint32, status ormdomain.UserStatus) error {
+	// TODO: SendStatusToPrivate()
+	SendStatusToFriends()
+	SendStatusToGroup()
+	return nil
 }
+
+func SendGroupMessage(ormdomain.GroupMessage) error {
+	GetSenderGroups()
+
+	GetGroupOnlineUsers()
+	SendMessageToUsers()
+
+	return nil
+}
+
+func SendStatusToFriends() {}
+func SendStatusToGroup()   {}
+func GetSenderGroups()     {}
+func GetGroupOnlineUsers() {}
+func SendMessageToUsers()  {}

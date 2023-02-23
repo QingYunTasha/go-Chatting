@@ -9,10 +9,11 @@ const (
 )
 
 type User struct {
-	ID     uint32     `gorm:"primaryKey;autoIncrement"`
-	Name   string     `gorm:"not null;default:null;unique"`
-	Status UserStatus `gorm:"not null;default:offline"`
-	Groups []Group    `gorm:"many2many:group_users;constraint:OnDelete:CASCADE;"`
+	ID      uint32     `gorm:"primaryKey;autoIncrement"`
+	Name    string     `gorm:"not null;default:null;unique"`
+	Status  UserStatus `gorm:"not null;default:offline"`
+	Friends []User     `gorm:"many2many:user_friends"`
+	Groups  []Group    `gorm:"many2many:group_users;constraint:OnDelete:CASCADE;"`
 }
 
 type UserRepository interface {
@@ -21,4 +22,5 @@ type UserRepository interface {
 	Update(ID uint32, user *User) error
 	Delete(ID uint32) error
 	GetGroups(ID uint32) ([]Group, error)
+	GetUsers(ID uint32) ([]User, error)
 }
