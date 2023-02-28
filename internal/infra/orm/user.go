@@ -46,7 +46,7 @@ func (u *UserRepository) GetGroups(ID uint32) ([]ormdomain.Group, error) {
 	return user.Groups, nil
 }
 
-func (u *UserRepository) GetUsers(ID uint32) ([]ormdomain.User, error) {
+func (u *UserRepository) GetFriends(ID uint32) ([]ormdomain.User, error) {
 	var user ormdomain.User
 	if err := u.db.Preload("Friends").Take(&user, ID).Error; err != nil {
 		return nil, err

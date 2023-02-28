@@ -22,5 +22,5 @@ type UserRepository interface {
 	Update(ID uint32, user *User) error
 	Delete(ID uint32) error
 	GetGroups(ID uint32) ([]Group, error)
-	GetUsers(ID uint32) ([]User, error)
+	GetFriends(ID uint32) ([]User, error)
 }
