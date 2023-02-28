@@ -16,19 +16,19 @@ func InitDb(dsn string) (*gorm.DB, error) {
 	})
 }
 
-type OrmRepository struct {
+type DatabaseRepository struct {
 	Group          dbdomain.GroupRepository
 	User           dbdomain.UserRepository
 	GroupMessage   dbdomain.GroupMessageRepository
 	PrivateMessage dbdomain.PrivateMessageRepository
 }
 
-func NewOrmRepository(db *gorm.DB) (*OrmRepository, error) {
+func NewOrmRepository(db *gorm.DB) (*DatabaseRepository, error) {
 	if err := db.AutoMigrate(&dbdomain.Group{}, &dbdomain.GroupMessage{}, &dbdomain.User{}, &dbdomain.PrivateMessage{}); err != nil {
 		return nil, err
 	}
 
-	return &OrmRepository{
+	return &DatabaseRepository{
 		Group:          database.NewGroupRepository(db),
 		User:           database.NewUserRepository(db),
 		GroupMessage:   database.NewGroupMessageRepository(db),
