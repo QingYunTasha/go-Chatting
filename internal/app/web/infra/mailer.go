@@ -26,7 +26,7 @@ func (m *SMTPMailer) SendPasswordResetEmail(to, token string) error {
 	// Set up email message
 	from := "your-email@example.com"
 	subject := "Password reset request"
-	body := fmt.Sprintf("Hello,\n\nTo reset your password, please click the following link:\n\nhttps://your-website.com/reset-password?token=%s\n\nIf you did not request this password reset, please ignore this email.\n\nThanks,\nThe Your Website Team", token)
+	body := fmt.Sprintf("Hello,\n\nTo reset your password, please click the following link:\n\nhttp://localhost:5000/reset-password?token=%s\n\nIf you did not request this password reset, please ignore this email.\n\nThanks,\nThe Your Website Team", token)
 	msg := gomail.NewMessage()
 	msg.SetHeader("From", from)
 	msg.SetHeader("To", to)
