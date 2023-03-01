@@ -165,7 +165,7 @@ func (r *UserRepository) RemoveGroupMember(userID uint32, groupID uint32) error 
 		return err
 	}
 	if len(user.Groups) == 0 {
-		return dbdomain.ErrGroupNotFound
+		return errors.New("group not found")
 	}
 	group = &user.Groups[0]
 
@@ -176,4 +176,56 @@ func (r *UserRepository) RemoveGroupMember(userID uint32, groupID uint32) error 
 	}
 
 	return nil
+}
+
+func (r *UserRepository) AreFriends(userID uint32, friendID uint32) (bool, error) {
+	user, err := r.Get(userID)
+	if err != nil {
+		return false, err
+	}
+
+	// check if friend exists in user's friend list
+	for _, friend := range user.Friends {
+		if friend.ID == friendID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (r *UserRepository) AddFriend(userID uint32, friendID uint32) error {
+	user, err := r.Get(userID)
+	if err != nil {
+		return err
+	}
+
+	friend, err := r.Get(friendID)
+	if err != nil {
+		return err
+	}
+
+	// add friend to user's friend list
+	user.Friends = append(user.Friends, *friend)
+
+	// save changes
+	return r.db.Save(user).Error
+}
+
+func (r *UserRepository) RemoveFriend(userID uint32, friendID uint32) error {
+	user, err := r.Get(userID)
+	if err != nil {
+		return err
+	}
+
+	// remove friend from user's friend list
+	for i, friend := range user.Friends {
+		if friend.ID == friendID {
+			user.Friends = append(user.Friends[:i], user.Friends[i+1:]...)
+			break
+		}
+	}
+
+	// save changes
+	return r.db.Save(user).Error
 }

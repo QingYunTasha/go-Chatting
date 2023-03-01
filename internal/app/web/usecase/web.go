@@ -8,16 +8,22 @@ import (
 	"net/http"
 	"time"
 
+	infra "go-Chatting/internal/app/web/infra"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type WebUsecase struct {
 	DbRepo *dbfactory.DatabaseRepository
+	Mailer *infra.SMTPMailer
 }
 
-func NewWebUsecase(dbRepo *dbfactory.DatabaseRepository) *WebUsecase {
-	return &WebUsecase{DbRepo: dbRepo}
+func NewWebUsecase(dbRepo *dbfactory.DatabaseRepository, mailer *infra.SMTPMailer) *WebUsecase {
+	return &WebUsecase{
+		DbRepo: dbRepo,
+		Mailer: mailer,
+	}
 }
 
 func (u *WebUsecase) Register(name, email, password string) error {
@@ -45,7 +51,7 @@ func (u *WebUsecase) Register(name, email, password string) error {
 
 func (u *WebUsecase) Login(email, password string, w http.ResponseWriter) error {
 	// Find user by email
-	user, err := u.DbRepo.User.FindByEmail(email)
+	user, err := u.DbRepo.User.GetByEmail(email)
 	if err != nil {
 		return errors.New("invalid email or password")
 	}
@@ -152,13 +158,13 @@ func (u *WebUsecase) ForgotPassword(email string) error {
 
 	// Generate password reset token
 	token := generateRandomToken(32)
-	err = u.savePasswordResetToken(user.ID, token)
+	err = u.DbRepo.User.SavePasswordResetToken(user.ID, token)
 	if err != nil {
 		return err
 	}
 
 	// Send password reset email
-	err = u.mailer.SendPasswordResetEmail(user.Email, token)
+	err = u.Mailer.SendPasswordResetEmail(user.Email, token)
 	if err != nil {
 		return err
 	}
@@ -178,19 +184,19 @@ func generateRandomToken(length int) string {
 
 func (u *WebUsecase) ResetPassword(token string, password string) error {
 	// Find user by password reset token
-	user, err := u.findByPasswordResetToken(token)
+	user, err := u.DbRepo.User.FindByPasswordResetToken(token)
 	if err != nil {
 		return err
 	}
 
 	// Reset password
-	err = u.resetPassword(user.ID, password)
+	err = u.DbRepo.User.ResetPassword(user.ID, password)
 	if err != nil {
 		return err
 	}
 
 	// Clear password reset token
-	err = u.clearPasswordResetToken(user.ID)
+	err = u.DbRepo.User.ClearPasswordResetToken(user.ID)
 	if err != nil {
 		return err
 	}
@@ -200,7 +206,7 @@ func (u *WebUsecase) ResetPassword(token string, password string) error {
 
 func (u *WebUsecase) JoinGroup(userID uint32, groupID uint32) error {
 	// Check if user is already a member of the group
-	isMember, err := u.isGroupMember(userID, groupID)
+	isMember, err := u.DbRepo.User.IsGroupMember(userID, groupID)
 	if err != nil {
 		return err
 	}
@@ -211,7 +217,7 @@ func (u *WebUsecase) JoinGroup(userID uint32, groupID uint32) error {
 	}
 
 	// Add user to group
-	err = u.addGroupMember(userID, groupID)
+	err = u.DbRepo.User.AddGroupMember(userID, groupID)
 	if err != nil {
 		return err
 	}
@@ -221,7 +227,7 @@ func (u *WebUsecase) JoinGroup(userID uint32, groupID uint32) error {
 
 func (u *WebUsecase) LeaveGroup(userID uint32, groupID uint32) error {
 	// Check if user is a member of the group
-	isMember, err := u.isGroupMember(userID, groupID)
+	isMember, err := u.DbRepo.User.IsGroupMember(userID, groupID)
 	if err != nil {
 		return err
 	}
@@ -232,7 +238,7 @@ func (u *WebUsecase) LeaveGroup(userID uint32, groupID uint32) error {
 	}
 
 	// Remove user from group
-	err = u.removeGroupMember(userID, groupID)
+	err = u.DbRepo.User.RemoveGroupMember(userID, groupID)
 	if err != nil {
 		return err
 	}
@@ -242,7 +248,7 @@ func (u *WebUsecase) LeaveGroup(userID uint32, groupID uint32) error {
 
 func (u *WebUsecase) AddFriend(userID uint32, friendID uint32) error {
 	// Check if the user is already friends with the friend
-	areFriends, err := u.areFriends(userID, friendID)
+	areFriends, err := u.DbRepo.User.AreFriends(userID, friendID)
 	if err != nil {
 		return err
 	}
@@ -253,7 +259,7 @@ func (u *WebUsecase) AddFriend(userID uint32, friendID uint32) error {
 	}
 
 	// Add the friend to the user's friend list
-	err = u.addFriend(userID, friendID)
+	err = u.DbRepo.User.AddFriend(userID, friendID)
 	if err != nil {
 		return err
 	}
@@ -263,7 +269,7 @@ func (u *WebUsecase) AddFriend(userID uint32, friendID uint32) error {
 
 func (u *WebUsecase) RemoveFriend(userID uint32, friendID uint32) error {
 	// Check if the user is friends with the friend
-	areFriends, err := u.areFriends(userID, friendID)
+	areFriends, err := u.DbRepo.User.AreFriends(userID, friendID)
 	if err != nil {
 		return err
 	}
@@ -274,7 +280,7 @@ func (u *WebUsecase) RemoveFriend(userID uint32, friendID uint32) error {
 	}
 
 	// Remove the friend from the user's friend list
-	err = u.removeFriend(userID, friendID)
+	err = u.DbRepo.User.RemoveFriend(userID, friendID)
 	if err != nil {
 		return err
 	}
