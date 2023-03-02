@@ -2,21 +2,23 @@ package usecase
 
 import (
 	"errors"
+	webdomain "go-Chatting/domain/app/web"
 	dbdomain "go-Chatting/domain/infra/database"
+	infra "go-Chatting/internal/app/web/infra"
 	dbfactory "go-Chatting/internal/infra/database/factory"
+	utils "go-Chatting/utils"
 	"math/rand"
 	"net/http"
 	"time"
 
-	infra "go-Chatting/internal/app/web/infra"
-
-	"github.com/google/uuid"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type WebUsecase struct {
-	DbRepo *dbfactory.DatabaseRepository
-	Mailer *infra.SMTPMailer
+	DbRepo    *dbfactory.DatabaseRepository
+	Mailer    *infra.SMTPMailer
+	SecretKey *utils.SecretKey
 }
 
 func NewWebUsecase(dbRepo *dbfactory.DatabaseRepository, mailer *infra.SMTPMailer) *WebUsecase {
@@ -63,11 +65,22 @@ func (u *WebUsecase) Login(email, password string, w http.ResponseWriter) error 
 	}
 
 	// Create session token
-	token := uuid.New().String()
+	token := jwt.New(jwt.SigningMethodES256)
+	claims := webdomain.CustomJWTClaims{
+		UserID: user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+	token.Claims = claims
+	signedToken, err := token.SignedString([]byte(u.SecretKey.Get()))
+	if err != nil {
+		return err
+	}
 
 	// Set cookie
 	expiration := time.Now().Add(24 * time.Hour)
-	cookie := http.Cookie{Name: "token", Value: token, Expires: expiration}
+	cookie := http.Cookie{Name: "token", Value: signedToken, Expires: expiration}
 	http.SetCookie(w, &cookie)
 
 	return nil

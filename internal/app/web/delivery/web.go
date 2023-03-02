@@ -1,8 +1,8 @@
 package delivery
 
 import (
-	"errors"
 	webdomain "go-Chatting/domain/app/web"
+	"go-Chatting/utils"
 	"net/http"
 	"strconv"
 
@@ -13,13 +13,28 @@ type WebHandler struct {
 	usecase webdomain.WebUsecase
 }
 
-func NewWebHandler(s *gin.Engine, webUsecase webdomain.WebUsecase) {
-	h := &WebHandler{
+func NewWebHandler(router *gin.Engine, webUsecase webdomain.WebUsecase, secretKey *utils.SecretKey) {
+	handler := &WebHandler{
 		usecase: webUsecase,
 	}
+	// Add public routes
+	router.POST("/register", handler.Register)
+	router.POST("/login", handler.Login)
+	router.POST("/logout", handler.Logout)
+	router.GET("/user/:id", handler.ViewProfile)
+	router.POST("/user/:id/forgotpassword", handler.ForgotPassword)
+	router.POST("/user/:id/resetpassword", handler.ResetPassword)
 
-	s.POST("/register", h.Register)
-	s.GET("/reset-password", h.ResetPassword)
+	// Add authentication middleware to protected routes
+	protectedRoutes := router.Group("/")
+	protectedRoutes.Use(AuthMiddleware(secretKey))
+	protectedRoutes.PATCH("/user/:id", handler.UpdateProfile)
+	protectedRoutes.PATCH("/user/:id/password", handler.ChangePassword)
+	protectedRoutes.POST("/user/:id/joingroup", handler.JoinGroup)
+	protectedRoutes.POST("/user/:id/leavegroup", handler.LeaveGroup)
+	protectedRoutes.POST("/user/:id/addfriend", handler.AddFriend)
+	protectedRoutes.POST("/user/:id/removefriend", handler.RemoveFriend)
+
 }
 
 func (h *WebHandler) Register(c *gin.Context) {
@@ -64,8 +79,10 @@ func (h *WebHandler) Login(c *gin.Context) {
 }
 
 func (h *WebHandler) Logout(c *gin.Context) {
-	if err := d.usecase.Logout(c.Writer, c.Request); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.Wrap(err, "failed to logout user").Error()})
+	if err := h.usecase.Logout(c.Writer, c.Request); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -78,13 +95,13 @@ func (h *WebHandler) ViewProfile(c *gin.Context) {
 	// Convert string to uint32
 	id, err := strconv.ParseUint(userID, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.Wrap(err, "invalid user ID").Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := d.usecase.ViewProfile(uint32(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.Wrap(err, "failed to get user profile").Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

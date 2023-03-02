@@ -3,6 +3,8 @@ package domain
 import (
 	dbdomain "go-Chatting/domain/infra/database"
 	"net/http"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type WebUsecase interface {
@@ -18,4 +20,9 @@ type WebUsecase interface {
 	LeaveGroup(userID uint32, groupID uint32) error
 	AddFriend(userID uint32, friendID uint32) error
 	RemoveFriend(userID uint32, friendID uint32) error
+}
+
+type CustomJWTClaims struct {
+	UserID uint32 `json:"user_id"`
+	jwt.RegisteredClaims
 }
