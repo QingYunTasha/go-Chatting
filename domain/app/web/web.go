@@ -26,3 +26,11 @@ type CustomJWTClaims struct {
 	UserID uint32 `json:"user_id"`
 	jwt.RegisteredClaims
 }
+
+type SMTPMailer interface {
+	SendPasswordResetEmail(to string, token string) error
+}
+
+type SecretKey interface {
+	Get() string
+}

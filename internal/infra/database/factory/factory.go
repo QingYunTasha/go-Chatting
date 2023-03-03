@@ -23,7 +23,7 @@ type DatabaseRepository struct {
 	PrivateMessage dbdomain.PrivateMessageRepository
 }
 
-func NewOrmRepository(db *gorm.DB) (*DatabaseRepository, error) {
+func NewDbRepository(db *gorm.DB) (*DatabaseRepository, error) {
 	if err := db.AutoMigrate(&dbdomain.Group{}, &dbdomain.GroupMessage{}, &dbdomain.User{}, &dbdomain.PrivateMessage{}); err != nil {
 		return nil, err
 	}

@@ -14,20 +14,20 @@ type SecretKey struct {
 
 func NewSecretKey() *SecretKey {
 	sk := SecretKey{}
-	sk.key = sk.GenerateSecretKey()
+	sk.key = sk.generateSecretKey()
 	sk.expireTime = time.Now().Add(time.Hour * 24)
 	return &sk
 }
 
 func (k *SecretKey) Get() string {
 	if k.expireTime.Before(time.Now()) {
-		k.key = k.GenerateSecretKey()
+		k.key = k.generateSecretKey()
 	}
 
 	return k.key
 }
 
-func (k *SecretKey) GenerateSecretKey() string {
+func (k *SecretKey) generateSecretKey() string {
 	key := make([]byte, 32)
 	_, err := rand.Read(key)
 	if err != nil {

@@ -2,6 +2,7 @@ package delivery
 
 import (
 	webdomain "go-Chatting/domain/app/web"
+	dbdomain "go-Chatting/domain/infra/database"
 	"go-Chatting/utils"
 	"net/http"
 	"strconv"
@@ -90,7 +91,7 @@ func (h *WebHandler) Logout(c *gin.Context) {
 }
 
 func (h *WebHandler) ViewProfile(c *gin.Context) {
-	userID := c.Param("userID")
+	userID := c.Param("id")
 
 	// Convert string to uint32
 	id, err := strconv.ParseUint(userID, 10, 32)
@@ -99,7 +100,7 @@ func (h *WebHandler) ViewProfile(c *gin.Context) {
 		return
 	}
 
-	user, err := d.usecase.ViewProfile(uint32(id))
+	user, err := h.usecase.ViewProfile(uint32(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -109,32 +110,35 @@ func (h *WebHandler) ViewProfile(c *gin.Context) {
 }
 
 func (h *WebHandler) UpdateProfile(c *gin.Context) {
-	userID, err := h.getUserIDFromContext(c)
-	if err != nil {
-		h.respondError(c, http.StatusInternalServerError, err)
-		return
-	}
+	userID := c.Param("id")
 
 	var user dbdomain.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		h.respondError(c, http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.usecase.UpdateProfile(userID, &user); err != nil {
-		h.respondError(c, http.StatusInternalServerError, err)
+	// Convert string to uint32
+	id, err := strconv.ParseUint(userID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	h.respondSuccess(c)
+	if err := h.usecase.UpdateProfile(uint32(id), &user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
 
 func (h *WebHandler) ChangePassword(c *gin.Context) {
-	userID := c.GetUint32("userID")
+	userID := c.GetUint("id")
 	oldPassword := c.PostForm("old_password")
 	newPassword := c.PostForm("new_password")
 
-	err := h.UseCase.ChangePassword(userID, oldPassword, newPassword)
+	err := h.usecase.ChangePassword(uint32(userID), oldPassword, newPassword)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -146,7 +150,7 @@ func (h *WebHandler) ChangePassword(c *gin.Context) {
 func (h *WebHandler) ForgotPassword(c *gin.Context) {
 	email := c.PostForm("email")
 
-	err := h.UseCase.ForgotPassword(email)
+	err := h.usecase.ForgotPassword(email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -159,7 +163,7 @@ func (h *WebHandler) ResetPassword(c *gin.Context) {
 	token := c.Query("token")
 	password := c.PostForm("password")
 
-	err := h.UseCase.ResetPassword(token, password)
+	err := h.usecase.ResetPassword(token, password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -169,10 +173,17 @@ func (h *WebHandler) ResetPassword(c *gin.Context) {
 }
 
 func (h *WebHandler) JoinGroup(c *gin.Context) {
-	userID := c.GetUint32("userID")
+	userID := c.GetUint("id")
 	groupID := c.PostForm("group_id")
 
-	err := h.UseCase.JoinGroup(userID, groupID)
+	// Convert string to uint32
+	id, err := strconv.ParseUint(groupID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.usecase.JoinGroup(uint32(userID), uint32(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -182,10 +193,17 @@ func (h *WebHandler) JoinGroup(c *gin.Context) {
 }
 
 func (h *WebHandler) LeaveGroup(c *gin.Context) {
-	userID := c.GetUint32("userID")
+	userID := c.GetUint("id")
 	groupID := c.PostForm("group_id")
 
-	err := h.UseCase.LeaveGroup(userID, groupID)
+	// Convert string to uint32
+	id, err := strconv.ParseUint(groupID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.usecase.LeaveGroup(uint32(userID), uint32(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -195,10 +213,17 @@ func (h *WebHandler) LeaveGroup(c *gin.Context) {
 }
 
 func (h *WebHandler) AddFriend(c *gin.Context) {
-	userID := c.GetUint32("userID")
-	friendID := c.PostForm("friend_id")
+	userID := c.GetUint("id")
+	friendIDStr := c.PostForm("friend_id")
 
-	err := h.UseCase.AddFriend(userID, friendID)
+	// Convert string to uint32
+	friendIDUint, err := strconv.ParseUint(friendIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.usecase.AddFriend(uint32(userID), uint32(friendIDUint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -208,10 +233,16 @@ func (h *WebHandler) AddFriend(c *gin.Context) {
 }
 
 func (h *WebHandler) RemoveFriend(c *gin.Context) {
-	userID := c.GetUint32("userID")
-	friendID := c.PostForm("friend_id")
+	userID := c.GetUint("id")
+	friendIDStr := c.PostForm("friend_id")
 
-	err := h.UseCase.RemoveFriend(userID, friendID)
+	// Convert string to uint32
+	friendIDUint, err := strconv.ParseUint(friendIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = h.usecase.RemoveFriend(uint32(userID), uint32(friendIDUint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

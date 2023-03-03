@@ -4,10 +4,8 @@ import (
 	"errors"
 	webdomain "go-Chatting/domain/app/web"
 	dbdomain "go-Chatting/domain/infra/database"
-	infra "go-Chatting/internal/app/web/infra"
 	dbfactory "go-Chatting/internal/infra/database/factory"
 	utils "go-Chatting/utils"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -17,14 +15,15 @@ import (
 
 type WebUsecase struct {
 	DbRepo    *dbfactory.DatabaseRepository
-	Mailer    *infra.SMTPMailer
-	SecretKey *utils.SecretKey
+	Mailer    webdomain.SMTPMailer
+	SecretKey webdomain.SecretKey
 }
 
-func NewWebUsecase(dbRepo *dbfactory.DatabaseRepository, mailer *infra.SMTPMailer) *WebUsecase {
+func NewWebUsecase(dbRepo *dbfactory.DatabaseRepository, mailer webdomain.SMTPMailer, secretKey webdomain.SecretKey) webdomain.WebUsecase {
 	return &WebUsecase{
-		DbRepo: dbRepo,
-		Mailer: mailer,
+		DbRepo:    dbRepo,
+		Mailer:    mailer,
+		SecretKey: secretKey,
 	}
 }
 
@@ -170,7 +169,7 @@ func (u *WebUsecase) ForgotPassword(email string) error {
 	}
 
 	// Generate password reset token
-	token := generateRandomToken(32)
+	token := utils.GenerateRandomToken(32)
 	err = u.DbRepo.User.SavePasswordResetToken(user.ID, token)
 	if err != nil {
 		return err
@@ -183,16 +182,6 @@ func (u *WebUsecase) ForgotPassword(email string) error {
 	}
 
 	return nil
-}
-
-func generateRandomToken(length int) string {
-	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	rand.Seed(time.Now().UnixNano())
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }
 
 func (u *WebUsecase) ResetPassword(token string, password string) error {
