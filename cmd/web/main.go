@@ -46,6 +46,5 @@ func main() {
 	})
 
 	webdelivery.NewWebHandler(server, webUsecase, secretKey)
-
 	server.Run(":8080")
 }
