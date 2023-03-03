@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"errors"
-	"go-Chatting/utils"
 	"net/http"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware(secretKey *utils.SecretKey) gin.HandlerFunc {
+func AuthMiddleware(secretKey webdomain.SecretKey) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("token")
 		if err != nil {

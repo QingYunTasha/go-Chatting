@@ -3,7 +3,6 @@ package delivery
 import (
 	webdomain "go-Chatting/domain/app/web"
 	dbdomain "go-Chatting/domain/infra/database"
-	"go-Chatting/utils"
 	"net/http"
 	"strconv"
 
@@ -14,7 +13,7 @@ type WebHandler struct {
 	usecase webdomain.WebUsecase
 }
 
-func NewWebHandler(router *gin.Engine, webUsecase webdomain.WebUsecase, secretKey *utils.SecretKey) {
+func NewWebHandler(router *gin.Engine, webUsecase webdomain.WebUsecase, secretKey webdomain.SecretKey) {
 	handler := &WebHandler{
 		usecase: webUsecase,
 	}

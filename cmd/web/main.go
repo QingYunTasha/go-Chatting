@@ -1,6 +1,7 @@
 package main
 
 import (
+	config "go-Chatting/config"
 	webdelivery "go-Chatting/internal/app/web/delivery"
 	webinfra "go-Chatting/internal/app/web/infra"
 	webusecase "go-Chatting/internal/app/web/usecase"
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+	config.Init()
+
 	db, err := dbfactory.InitDb(viper.GetString("DB_DSN"))
 	if err != nil {
 		panic(err.Error())
