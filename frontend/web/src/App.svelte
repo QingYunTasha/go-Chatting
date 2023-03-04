@@ -1,46 +1,73 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import Counter from './lib/Counter.svelte'
+	import { onMount } from 'svelte';
+	
+	let emailAddress = "";
+	let emailAddressInput = null;
+	
+	let password = "";
+	let passwordInput = null;
+	
+	onMount(() => {
+		emailAddressInput.focus();
+	});
+	
+	const handleOnSubmit = (evt) => {
+		// Log user into account.
+	};
+	
+	const handleOnChange = (evt) => {
+		// Cannot dynamically update the `type` attribute via a two-way binding to the `type` attribtue.
+		// Error: 'type' attribute cannot be dynamic if input uses two-way binding.
+		passwordInput.setAttribute('type', evt.target.checked ? 'text' : 'password' );
+	}
 </script>
 
-<main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer"> 
-      <img src="/vite.svg" class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer"> 
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
-
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
+	.form__group {
+		margin-bottom: 0.875rem; 
+	}
+	
+	.form__group__label {
+		margin-bottom: 0.5rem;
+	}
+	
+	.form__group__input {
+		margin-bottom: 0;
+	}
+	
+	.form__group--check {
+		display: flex;
+		align-items: center;
+	}
+	
+	.form__group__checkbox {
+		margin-bottom: 0;
+	}
+	
+	.form__group--check > .form__group__label {
+		margin-bottom: 0;
+	}
+	
+	.form__group--check > .form__group__checkbox {
+		margin-right: 0.5rem;
+	}
 </style>
+
+<h1>
+	Login
+</h1>
+<form class="form" on:submit|preventDefault={handleOnSubmit}>
+	<div class="form__group">
+		<label class="form__group__label" for="emailAddress">E-Mail Address</label>
+		<input class="form__group__input" type="email" id="emailAddress" bind:this={emailAddressInput} bind:value={emailAddress} required />
+	</div>
+	<div class="form__group">
+		<label class="form__group__label" for="password">Password</label>
+		<input class="form__group__input" type="password" id="password" bind:this={passwordInput} bind:value={password} required />
+	</div>
+	<div class="form__group form__group--check">
+		<input class="form__group__checkbox" type="checkbox" id="showPassword" on:change={handleOnChange} />
+		<label class="form__group__label" for="showPassword">Show Password</label>
+	</div>
+	<button type="submit">Submit</button>
+</form>
