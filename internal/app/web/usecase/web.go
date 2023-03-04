@@ -50,17 +50,17 @@ func (u *WebUsecase) Register(name, email, password string) error {
 	return u.DbRepo.User.Create(user)
 }
 
-func (u *WebUsecase) Login(email, password string, w http.ResponseWriter) error {
+func (u *WebUsecase) Login(email, password string, w http.ResponseWriter) (uint32, error) {
 	// Find user by email
 	user, err := u.DbRepo.User.GetByEmail(email)
 	if err != nil {
-		return errors.New("invalid email or password")
+		return 0, errors.New("invalid email or password")
 	}
 
 	// Check password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return errors.New("invalid email or password")
+		return 0, errors.New("invalid email or password")
 	}
 
 	// Create session token
@@ -74,7 +74,7 @@ func (u *WebUsecase) Login(email, password string, w http.ResponseWriter) error 
 	token.Claims = claims
 	signedToken, err := token.SignedString([]byte(u.SecretKey.Get()))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Set cookie
@@ -82,7 +82,7 @@ func (u *WebUsecase) Login(email, password string, w http.ResponseWriter) error 
 	cookie := http.Cookie{Name: "token", Value: signedToken, Expires: expiration}
 	http.SetCookie(w, &cookie)
 
-	return nil
+	return user.ID, nil
 }
 
 func (u *WebUsecase) Logout(w http.ResponseWriter, r *http.Request) error {

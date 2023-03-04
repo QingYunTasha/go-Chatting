@@ -9,7 +9,7 @@ import (
 
 type WebUsecase interface {
 	Register(name, email, password string) error
-	Login(email, password string, w http.ResponseWriter) error
+	Login(email, password string, w http.ResponseWriter) (uint32, error)
 	Logout(w http.ResponseWriter, r *http.Request) error
 	ViewProfile(userID uint32) (*dbdomain.User, error)
 	UpdateProfile(userID uint32, user *dbdomain.User) error

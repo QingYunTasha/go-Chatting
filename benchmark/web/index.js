@@ -2,107 +2,37 @@ import http from "k6/http";
 import { check, group } from "k6";
 
 export default function() {
-    const url = "http://localhost:8080";
+    const host = "http://localhost:8080";
     const params = {
         headers: { 
             'Content-Type': 'application/json' 
         },
     }
+    const name = "jimmy";
+    const email = "jimmy@example.com";
+    const password = "password";
 
     group("register", () =>{
         let payload = JSON.stringify({
-            name: "John Doe",
-            email: "john.doe@example.com",
-            password: "password123"
+            name: name,
+            email: email,
+            password: password
         });
     
-        let res = http.post(url + "/register", payload, params);
+        let res = http.post(host + "/register", payload, params);
     
         check(res, {
-            "status is 201": (r) => r.status === 201,
-            "response body is not empty": (r) => r.body.length > 0
+            "status is 201": (r) => r.status === 201
         });
     })
 
-    group("login", () =>{
-        let payload = JSON.stringify({
-            email: "john.doe@example.com",
-            password: "password123"
-        });
-    
-        let res = http.post(url + "/login", payload, params);
-    
-        check(res, {
-            "status is 200": (r) => r.status === 200,
-            "response body is not empty": (r) => r.body.length > 0
-        });
-    })
-
-    group("logout", () =>{
-        let res = http.get(url + "/logout", params);
-
-        check(res, {
-            'status is 200': (r) => r.status === 200,
-            'response body is not empty': (r) => r.body.length > 0,
-        });
-    })
-
-    group("view profile", () => {
-        let userId = 123 // Replace with valid user ID
-        let res = http.get(`${url}/users/${userId}`, params)
-    
-        check(res, {
-            "status is 200": (r) => r.status === 200,
-            "response body is not empty": (r) => r.body.length > 0,
-        })
-    })
-
-    group("update profile", () => {
-        let userId = 123
-        let payload = JSON.stringify({
-            "name": "Jane Doe",
-            "email": "jane.doe@example.com",
-            "password": "newpassword123"
-        });
-    
-        let res = http.put(`${url}/${userId}`, payload, params);
-    
-        check(res, {
-            "status is 200": (r) => r.status === 200,
-            "response body is not empty": (r) => r.body.length > 0
-        });
-    });
-
-    group('Change Password', () => {
-        // Define the user ID to use in the request
-        const userID = 1234;
-      
-        // Define the old and new passwords to use in the request
-        const oldPassword = 'password123';
-        const newPassword = 'newpassword456';
-      
-        // Define the request payload
-        const payload = JSON.stringify({
-          old_password: oldPassword,
-          new_password: newPassword,
-        });
-      
-        // Send the request and capture the response
-        const res = http.post(`${url}/change_password/${userID}`, payload, params);
-      
-        // Verify that the response was successful
-        check(res, {
-          'status is 200': (r) => r.status === 200,
-          'response body is not empty': (r) => r.body.length > 0,
-        });
-    });
-
-    group("forgot password", () => {
+    // no test because smtp server
+    /* group("forgot password", () => {
         let payload = JSON.stringify({
           email: "testuser@example.com"
         });
       
-        let res = http.post(url + "/forgot-password", payload, params);
+        let res = http.post(host + "/forgot-password", payload, params);
       
         check(res, {
           "status is 200": (r) => r.status === 200,
@@ -116,16 +46,83 @@ export default function() {
             password: "new_password"
         });
     
-        let res = http.post(url + "/reset-password?token=" + token, payload, params);
+        let res = http.post(host + "/reset-password?token=" + token, payload, params);
     
         check(res, {
             'status is 200': (r) => r.status === 200,
             'response body is not empty': (r) => r.body.length > 0,
         });
+    }) */
+
+    let token;
+    let userID;
+    group("login", () =>{
+        let payload = JSON.stringify({
+            email: email,
+            password: password
+        });
+    
+        let res = http.post(host + "/login", payload, params);
+    
+        check(res, {
+            "status is 200": (r) => r.status === 200
+        });
+        
+
+        token = res.headers["Set-Cookie"];
+        let resBody = JSON.parse(res.body);
+        userID = resBody.userID;
     })
 
+
+    let tokenedParams = params;
+    tokenedParams.headers["Cookie"] = token;
+
+    group("view profile", () => {
+        let res = http.get(`${host}/users/${userID}`, tokenedParams)
+    
+        check(res, {
+            "status is 200": (r) => r.status === 200,
+            "response body is not empty": (r) => r.body.length > 0,
+        })
+    })
+
+    group("update profile", () => {
+        let payload = JSON.stringify({
+            "name": "zeka"
+        });
+    
+        let res = http.patch(`${host}/${userID}`, payload, tokenedParams);
+    
+        check(res, {
+            "status is 200": (r) => r.status === 200
+        });
+    });
+
+    group('Change Password', () => {
+        // Define the old and new passwords to use in the request
+        const oldPassword = password;
+        const newPassword = "password2";
+      
+        // Define the request payload
+        const payload = JSON.stringify({
+          old_password: oldPassword,
+          new_password: newPassword,
+        });
+      
+        // Send the request and capture the response
+        const res = http.post(`${host}/users/${userID}/changepassword`, payload, tokenedParams);
+      
+        // Verify that the response was successful
+        check(res, {
+          'status is 200': (r) => r.status === 200,
+          'response body is not empty': (r) => r.body.length > 0,
+        });
+    });
+
+
+    /* const groupID = "T1"
     group("join group", () => {
-        let authToken = "<insert your auth token here>";
         let groupID = 123;
       
 
@@ -133,7 +130,7 @@ export default function() {
             "group_id": groupID,
         });
       
-        let res = http.post(url + "/join-group", payload, params);
+        let res = http.post(host + "/join-group", payload, params);
       
         check(res, {
           "status is 200": (r) => r.status === 200,
@@ -145,20 +142,35 @@ export default function() {
         let payload = JSON.stringify({
             'group_id': '1'
         });
-        let res = http.post(`${url}/users/${userID}/leavegroup`, payload, params);
+        let res = http.post(`${host}/users/${userID}/leavegroup`, payload, params);
 
         check(res, {
             'status is 200': (r) => r.status === 200,
             'response body is not empty': (r) => r.body.length > 0,
         });
+    }) */
+
+    const friendEmail = "zeus@example.com" 
+    group("register friend", () =>{
+        let payload = JSON.stringify({
+            name: "zeus",
+            email: friendEmail,
+            password: "password"
+        });
+    
+        let res = http.post(host + "/register", payload, params);
+    
+        check(res, {
+            "status is 201": (r) => r.status === 201
+        });
     })
 
     group("add friend", () => {
-        const userID = 123; // replace with a valid user ID
-        const friendID = 456; // replace with a valid friend ID
-        const url = "http://localhost:8080/friends";
+        let payload = JSON.stringify({
+            "email": friendEmail,
+        })
 
-        let res = http.post(url, { friend_id: friendID }, { headers: { id: userID } });
+        let res = http.post(`${host}/users/${userID}/addfriend`, payload, tokenedParams);
 
         check(res, {
             "status is 200": (r) => r.status === 200,
@@ -167,25 +179,23 @@ export default function() {
     })
 
     group("remove friend", () => {
-        let userID = 1;
-        let friendID = 2;
-        
-        let response = http.post(
-          "http://localhost:8080/remove-friend",
-          { 
-            friend_id: friendID 
-          },
-          {
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-          }
-        );
+        let payload = JSON.stringify({
+            "email": friendEmail,
+        })
+
+        let response = http.post(`${host}/users/${userID}/removefriend`, payload, tokenedParams);
       
         check(response, {
           "status is 200": (r) => r.status === 200,
           "response body contains message": (r) => r.body.includes("Friend removed successfully"),
+        });
+    })
+
+    group("logout", () =>{
+        let res = http.post(host + "/logout", tokenedParams);
+
+        check(res, {
+            'status is 200': (r) => r.status === 200
         });
     })
 }

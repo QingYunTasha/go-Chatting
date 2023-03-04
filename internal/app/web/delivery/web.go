@@ -30,7 +30,7 @@ func NewWebHandler(router *gin.Engine, webUsecase webdomain.WebUsecase, secretKe
 	protectedRoutes.Use(AuthMiddleware(secretKey))
 	protectedRoutes.GET("/:id", handler.ViewProfile)
 	protectedRoutes.PATCH("/:id", handler.UpdateProfile)
-	protectedRoutes.PATCH("/:id/password", handler.ChangePassword)
+	protectedRoutes.POST("/:id/changepassword", handler.ChangePassword)
 	protectedRoutes.POST("/:id/joingroup", handler.JoinGroup)
 	protectedRoutes.POST("/:id/leavegroup", handler.LeaveGroup)
 	protectedRoutes.POST("/:id/addfriend", handler.AddFriend)
@@ -70,13 +70,13 @@ func (h *WebHandler) Login(c *gin.Context) {
 	}
 
 	// Attempt to log in the user
-	err := h.usecase.Login(req.Email, req.Password, c.Writer)
+	userID, err := h.usecase.Login(req.Email, req.Password, c.Writer)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"userID": userID})
 }
 
 func (h *WebHandler) Logout(c *gin.Context) {
