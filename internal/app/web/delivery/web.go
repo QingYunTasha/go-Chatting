@@ -21,19 +21,19 @@ func NewWebHandler(router *gin.Engine, webUsecase webdomain.WebUsecase, secretKe
 	router.POST("/register", handler.Register)
 	router.POST("/login", handler.Login)
 	router.POST("/logout", handler.Logout)
-	router.GET("/user/:id", handler.ViewProfile)
-	router.POST("/user/:id/forgotpassword", handler.ForgotPassword)
-	router.POST("/user/:id/resetpassword", handler.ResetPassword)
+	router.POST("/users/:id/forgotpassword", handler.ForgotPassword)
+	router.POST("/users/:id/resetpassword", handler.ResetPassword)
 
 	// Add authentication middleware to protected routes
-	protectedRoutes := router.Group("/")
+	protectedRoutes := router.Group("/users")
 	protectedRoutes.Use(AuthMiddleware(secretKey))
-	protectedRoutes.PATCH("/user/:id", handler.UpdateProfile)
-	protectedRoutes.PATCH("/user/:id/password", handler.ChangePassword)
-	protectedRoutes.POST("/user/:id/joingroup", handler.JoinGroup)
-	protectedRoutes.POST("/user/:id/leavegroup", handler.LeaveGroup)
-	protectedRoutes.POST("/user/:id/addfriend", handler.AddFriend)
-	protectedRoutes.POST("/user/:id/removefriend", handler.RemoveFriend)
+	protectedRoutes.GET("/:id", handler.ViewProfile)
+	protectedRoutes.PATCH("/:id", handler.UpdateProfile)
+	protectedRoutes.PATCH("/:id/password", handler.ChangePassword)
+	protectedRoutes.POST("/:id/joingroup", handler.JoinGroup)
+	protectedRoutes.POST("/:id/leavegroup", handler.LeaveGroup)
+	protectedRoutes.POST("/:id/addfriend", handler.AddFriend)
+	protectedRoutes.POST("/:id/removefriend", handler.RemoveFriend)
 
 }
 
