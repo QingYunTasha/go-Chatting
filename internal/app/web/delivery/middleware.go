@@ -13,6 +13,7 @@ import (
 
 func AuthMiddleware(secretKey webdomain.SecretKey) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.GetUint("id")
 		cookie, err := c.Cookie("token")
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -22,7 +23,7 @@ func AuthMiddleware(secretKey webdomain.SecretKey) gin.HandlerFunc {
 		}
 
 		// Verify the token
-		userID, err := verifyToken(cookie, []byte(secretKey.Get()))
+		token, err := verifyToken(cookie, uint32(userID), []byte(secretKey.Get()))
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "Unauthorized",
@@ -31,14 +32,14 @@ func AuthMiddleware(secretKey webdomain.SecretKey) gin.HandlerFunc {
 		}
 
 		// Set the user ID in the context for future use
-		c.Set("userID", userID)
+		c.Set("token", token)
 
 		// Call the next middleware/handler
 		c.Next()
 	}
 }
 
-func verifyToken(tokenString string, secretKey []byte) (*jwt.Token, error) {
+func verifyToken(tokenString string, userID uint32, secretKey []byte) (*jwt.Token, error) {
 	// Parse the token
 	token, err := jwt.ParseWithClaims(tokenString, &webdomain.CustomJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
@@ -56,6 +57,10 @@ func verifyToken(tokenString string, secretKey []byte) (*jwt.Token, error) {
 	claims, ok := token.Claims.(*webdomain.CustomJWTClaims)
 	if !ok || claims.ExpiresAt.Unix() < time.Now().UTC().Unix() {
 		return nil, errors.New("token has expired")
+	}
+
+	if claims.UserID != userID {
+		return nil, errors.New("invalid authentication")
 	}
 
 	return token, nil
