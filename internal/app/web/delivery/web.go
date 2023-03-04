@@ -3,7 +3,6 @@ package delivery
 import (
 	webdomain "go-Chatting/domain/app/web"
 	dbdomain "go-Chatting/domain/infra/database"
-	"go-Chatting/utils"
 	"net/http"
 	"strconv"
 
@@ -174,16 +173,9 @@ func (h *WebHandler) ResetPassword(c *gin.Context) {
 
 func (h *WebHandler) JoinGroup(c *gin.Context) {
 	userID := c.GetUint("id")
-	groupID := c.PostForm("group_id")
+	groupName := c.PostForm("groupname")
 
-	// Convert string to uint32
-	groupIDUint32, err := utils.StringToUint32(groupID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = h.usecase.JoinGroup(uint32(userID), groupIDUint32)
+	err := h.usecase.JoinGroup(uint32(userID), groupName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -194,16 +186,9 @@ func (h *WebHandler) JoinGroup(c *gin.Context) {
 
 func (h *WebHandler) LeaveGroup(c *gin.Context) {
 	userID := c.GetUint("id")
-	groupID := c.PostForm("group_id")
+	groupName := c.PostForm("groupname")
 
-	// Convert string to uint32
-	groupIDUint32, err := utils.StringToUint32(groupID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = h.usecase.LeaveGroup(uint32(userID), groupIDUint32)
+	err := h.usecase.LeaveGroup(uint32(userID), groupName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -214,16 +199,9 @@ func (h *WebHandler) LeaveGroup(c *gin.Context) {
 
 func (h *WebHandler) AddFriend(c *gin.Context) {
 	userID := c.GetUint("id")
-	friendIDStr := c.PostForm("friend_id")
+	friendName := c.PostForm("friendname")
 
-	// Convert string to uint32
-	friendIDUint32, err := utils.StringToUint32(friendIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = h.usecase.AddFriend(uint32(userID), friendIDUint32)
+	err := h.usecase.AddFriend(uint32(userID), friendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -234,16 +212,9 @@ func (h *WebHandler) AddFriend(c *gin.Context) {
 
 func (h *WebHandler) RemoveFriend(c *gin.Context) {
 	userID := c.GetUint("id")
-	friendIDStr := c.PostForm("friend_id")
+	friendName := c.PostForm("friendname")
 
-	// Convert string to uint32
-	friendIDUint32, err := utils.StringToUint32(friendIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = h.usecase.RemoveFriend(uint32(userID), friendIDUint32)
+	err := h.usecase.RemoveFriend(uint32(userID), friendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

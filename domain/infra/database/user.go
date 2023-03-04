@@ -17,8 +17,9 @@ type User struct {
 	Password           string         `gorm:"not null;default:null"`
 	Status             UserStatus     `gorm:"not null;default:offline"`
 	Friends            []User         `gorm:"many2many:user_friends"`
-	Groups             []Group        `gorm:"many2many:group_users;constraint:OnDelete:CASCADE;"`
+	Groups             []Group        `gorm:"many2many:group_users;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	PasswordResetToken sql.NullString `gorm:"default:null"`
+	OwnedGroups        []Group        `gorm:"foreignKey:OwnerID"`
 }
 
 type UserRepository interface {
@@ -33,10 +34,10 @@ type UserRepository interface {
 	FindByPasswordResetToken(token string) (*User, error)
 	ClearPasswordResetToken(userID uint32) error
 	ResetPassword(userID uint32, password string) error
-	IsGroupMember(userID uint32, groupID uint32) (bool, error)
-	AddGroupMember(userID, groupID uint32) error
-	RemoveGroupMember(userID uint32, groupID uint32) error
-	AreFriends(userID uint32, friendID uint32) (bool, error)
-	AddFriend(userID uint32, friendID uint32) error
-	RemoveFriend(userID uint32, friendID uint32) error
+	IsGroupMember(userID uint32, groupName string) (bool, error)
+	AddGroupMember(userID uint32, groupName string) error
+	RemoveGroupMember(userID uint32, groupName string) error
+	AreFriends(userID uint32, friendEmail string) (bool, error)
+	AddFriend(userID uint32, friendEmail string) error
+	RemoveFriend(userID uint32, friendEmail string) error
 }

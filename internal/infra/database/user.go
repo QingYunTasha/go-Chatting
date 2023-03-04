@@ -96,55 +96,59 @@ func (u *UserRepository) SavePasswordResetToken(userID uint32, token string) err
 	return nil
 }
 
-func (ur *UserRepository) FindByPasswordResetToken(token string) (*dbdomain.User, error) {
+func (r *UserRepository) FindByPasswordResetToken(token string) (*dbdomain.User, error) {
 	var user dbdomain.User
-	result := ur.db.Where("password_reset_token = ?", token).First(&user)
+	result := r.db.Where("password_reset_token = ?", token).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &user, nil
 }
 
-func (ur *UserRepository) ClearPasswordResetToken(userID uint32) error {
-	result := ur.db.Model(&dbdomain.User{}).Where("id = ?", userID).Update("password_reset_token", nil)
+func (r *UserRepository) ClearPasswordResetToken(userID uint32) error {
+	result := r.db.Model(&dbdomain.User{}).Where("id = ?", userID).Update("password_reset_token", nil)
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
 }
 
-func (ur *UserRepository) ResetPassword(userID uint32, password string) error {
+func (r *UserRepository) ResetPassword(userID uint32, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	result := ur.db.Model(&dbdomain.User{}).Where("id = ?", userID).Update("password", string(hashedPassword))
+	result := r.db.Model(&dbdomain.User{}).Where("id = ?", userID).Update("password", string(hashedPassword))
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
 }
 
-func (ur *UserRepository) IsGroupMember(userID uint32, groupID uint32) (bool, error) {
-	var count int64
-	result := ur.db.Model(&dbdomain.User{}).Where("id = ? AND group_id = ?", userID, groupID).Count(&count)
-	if result.Error != nil {
-		return false, result.Error
+func (r *UserRepository) IsGroupMember(userID uint32, groupName string) (bool, error) {
+	groups, err := r.GetGroups(userID)
+	if err != nil {
+		return false, err
 	}
-	if count > 0 {
-		return true, nil
+
+	for _, group := range groups {
+		if groupName == group.Name {
+			return true, nil
+		}
 	}
 	return false, nil
 }
 
-func (r *UserRepository) AddGroupMember(userID, groupID uint32) error {
+func (r *UserRepository) AddGroupMember(userID uint32, groupName string) error {
 	user := dbdomain.User{}
-	group := dbdomain.Group{}
-	err := r.db.First(&user, userID).Error
+	group := dbdomain.Group{
+		Name: groupName,
+	}
+	err := r.db.Take(&user, userID).Error
 	if err != nil {
 		return err
 	}
-	err = r.db.First(&group, groupID).Error
+	err = r.db.Take(&group).Error
 	if err != nil {
 		return err
 	}
@@ -155,12 +159,12 @@ func (r *UserRepository) AddGroupMember(userID, groupID uint32) error {
 	return nil
 }
 
-func (r *UserRepository) RemoveGroupMember(userID uint32, groupID uint32) error {
+func (r *UserRepository) RemoveGroupMember(userID uint32, groupName string) error {
 	user := &dbdomain.User{}
 	group := &dbdomain.Group{}
 
 	// Find the user and group
-	err := r.db.Preload("Groups", "id = ?", groupID).First(user, userID).Error
+	err := r.db.Preload("Groups", "name = ?", groupName).First(user, userID).Error
 	if err != nil {
 		return err
 	}
@@ -178,7 +182,7 @@ func (r *UserRepository) RemoveGroupMember(userID uint32, groupID uint32) error 
 	return nil
 }
 
-func (r *UserRepository) AreFriends(userID uint32, friendID uint32) (bool, error) {
+func (r *UserRepository) AreFriends(userID uint32, friendEmail string) (bool, error) {
 	user, err := r.Get(userID)
 	if err != nil {
 		return false, err
@@ -186,7 +190,7 @@ func (r *UserRepository) AreFriends(userID uint32, friendID uint32) (bool, error
 
 	// check if friend exists in user's friend list
 	for _, friend := range user.Friends {
-		if friend.ID == friendID {
+		if friend.Email == friendEmail {
 			return true, nil
 		}
 	}
@@ -194,13 +198,13 @@ func (r *UserRepository) AreFriends(userID uint32, friendID uint32) (bool, error
 	return false, nil
 }
 
-func (r *UserRepository) AddFriend(userID uint32, friendID uint32) error {
+func (r *UserRepository) AddFriend(userID uint32, friendEmail string) error {
 	user, err := r.Get(userID)
 	if err != nil {
 		return err
 	}
 
-	friend, err := r.Get(friendID)
+	friend, err := r.GetByEmail(friendEmail)
 	if err != nil {
 		return err
 	}
@@ -212,7 +216,7 @@ func (r *UserRepository) AddFriend(userID uint32, friendID uint32) error {
 	return r.db.Save(user).Error
 }
 
-func (r *UserRepository) RemoveFriend(userID uint32, friendID uint32) error {
+func (r *UserRepository) RemoveFriend(userID uint32, friendEmail string) error {
 	user, err := r.Get(userID)
 	if err != nil {
 		return err
@@ -220,7 +224,7 @@ func (r *UserRepository) RemoveFriend(userID uint32, friendID uint32) error {
 
 	// remove friend from user's friend list
 	for i, friend := range user.Friends {
-		if friend.ID == friendID {
+		if friend.Email == friendEmail {
 			user.Friends = append(user.Friends[:i], user.Friends[i+1:]...)
 			break
 		}

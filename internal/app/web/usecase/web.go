@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	webdomain "go-Chatting/domain/app/web"
 	dbdomain "go-Chatting/domain/infra/database"
 	dbfactory "go-Chatting/internal/infra/database/factory"
@@ -206,9 +207,31 @@ func (u *WebUsecase) ResetPassword(token string, password string) error {
 	return nil
 }
 
-func (u *WebUsecase) JoinGroup(userID uint32, groupID uint32) error {
+func (u *WebUsecase) CreateGroup(userID uint32, groupName string) error {
+	group := &dbdomain.Group{
+		Name:    groupName,
+		OwnerID: userID,
+	}
+
+	return u.DbRepo.Group.Create(group)
+}
+
+func (u *WebUsecase) RemoveGroup(userID uint32, groupName string) error {
+	group, err := u.DbRepo.Group.GetByName(groupName)
+	if err != nil {
+		return err
+	}
+
+	if group.OwnerID != userID {
+		return fmt.Errorf("%s is not owned by %d", groupName, userID)
+	}
+
+	return u.DbRepo.Group.Delete(group.ID)
+}
+
+func (u *WebUsecase) JoinGroup(userID uint32, groupName string) error {
 	// Check if user is already a member of the group
-	isMember, err := u.DbRepo.User.IsGroupMember(userID, groupID)
+	isMember, err := u.DbRepo.User.IsGroupMember(userID, groupName)
 	if err != nil {
 		return err
 	}
@@ -219,7 +242,7 @@ func (u *WebUsecase) JoinGroup(userID uint32, groupID uint32) error {
 	}
 
 	// Add user to group
-	err = u.DbRepo.User.AddGroupMember(userID, groupID)
+	err = u.DbRepo.User.AddGroupMember(userID, groupName)
 	if err != nil {
 		return err
 	}
@@ -227,9 +250,9 @@ func (u *WebUsecase) JoinGroup(userID uint32, groupID uint32) error {
 	return nil
 }
 
-func (u *WebUsecase) LeaveGroup(userID uint32, groupID uint32) error {
+func (u *WebUsecase) LeaveGroup(userID uint32, groupName string) error {
 	// Check if user is a member of the group
-	isMember, err := u.DbRepo.User.IsGroupMember(userID, groupID)
+	isMember, err := u.DbRepo.User.IsGroupMember(userID, groupName)
 	if err != nil {
 		return err
 	}
@@ -240,7 +263,7 @@ func (u *WebUsecase) LeaveGroup(userID uint32, groupID uint32) error {
 	}
 
 	// Remove user from group
-	err = u.DbRepo.User.RemoveGroupMember(userID, groupID)
+	err = u.DbRepo.User.RemoveGroupMember(userID, groupName)
 	if err != nil {
 		return err
 	}
@@ -248,9 +271,9 @@ func (u *WebUsecase) LeaveGroup(userID uint32, groupID uint32) error {
 	return nil
 }
 
-func (u *WebUsecase) AddFriend(userID uint32, friendID uint32) error {
+func (u *WebUsecase) AddFriend(userID uint32, friendEmail string) error {
 	// Check if the user is already friends with the friend
-	areFriends, err := u.DbRepo.User.AreFriends(userID, friendID)
+	areFriends, err := u.DbRepo.User.AreFriends(userID, friendEmail)
 	if err != nil {
 		return err
 	}
@@ -261,7 +284,7 @@ func (u *WebUsecase) AddFriend(userID uint32, friendID uint32) error {
 	}
 
 	// Add the friend to the user's friend list
-	err = u.DbRepo.User.AddFriend(userID, friendID)
+	err = u.DbRepo.User.AddFriend(userID, friendEmail)
 	if err != nil {
 		return err
 	}
@@ -269,9 +292,9 @@ func (u *WebUsecase) AddFriend(userID uint32, friendID uint32) error {
 	return nil
 }
 
-func (u *WebUsecase) RemoveFriend(userID uint32, friendID uint32) error {
+func (u *WebUsecase) RemoveFriend(userID uint32, friendEmail string) error {
 	// Check if the user is friends with the friend
-	areFriends, err := u.DbRepo.User.AreFriends(userID, friendID)
+	areFriends, err := u.DbRepo.User.AreFriends(userID, friendEmail)
 	if err != nil {
 		return err
 	}
@@ -282,7 +305,7 @@ func (u *WebUsecase) RemoveFriend(userID uint32, friendID uint32) error {
 	}
 
 	// Remove the friend from the user's friend list
-	err = u.DbRepo.User.RemoveFriend(userID, friendID)
+	err = u.DbRepo.User.RemoveFriend(userID, friendEmail)
 	if err != nil {
 		return err
 	}

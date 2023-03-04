@@ -16,10 +16,12 @@ type WebUsecase interface {
 	ChangePassword(userID uint32, oldPassword string, newPassword string) error
 	ForgotPassword(email string) error
 	ResetPassword(token string, password string) error
-	JoinGroup(userID uint32, groupID uint32) error
-	LeaveGroup(userID uint32, groupID uint32) error
-	AddFriend(userID uint32, friendID uint32) error
-	RemoveFriend(userID uint32, friendID uint32) error
+	CreateGroup(userID uint32, groupName string) error
+	RemoveGroup(userID uint32, groupName string) error
+	JoinGroup(userID uint32, groupName string) error
+	LeaveGroup(userID uint32, groupName string) error
+	AddFriend(userID uint32, friendEmail string) error
+	RemoveFriend(userID uint32, friendEmail string) error
 }
 
 type CustomJWTClaims struct {

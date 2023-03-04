@@ -18,8 +18,18 @@ func NewGroupRepository(db *gorm.DB) dbdomain.GroupRepository {
 
 func (r *GroupRepository) Get(ID uint32) (*dbdomain.Group, error) {
 	var group dbdomain.Group
-	err := r.db.Preload("Members").First(&group, ID).Error
-	if err != nil {
+	if err := r.db.Take(&group, ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &group, nil
+}
+
+func (r *GroupRepository) GetByName(name string) (*dbdomain.Group, error) {
+	group := dbdomain.Group{
+		Name: name,
+	}
+	if err := r.db.Take(&group).Error; err != nil {
 		return nil, err
 	}
 
